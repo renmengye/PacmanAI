@@ -71,7 +71,7 @@ public class MazeGraph {
      * from the current tile (exclusive) to the nearest node tile (inclusive) in
      * the given direction
      */
-    private List<Point> getPathToNextNode(Point tile, MoveDir dir) {
+    public List<Point> getPathToNextNode(Point tile, MoveDir dir) {
         ArrayList<Point> path = new ArrayList<Point>();
         Point dirVector = JUtil.getVector(dir);
         Point currTile;
@@ -223,6 +223,10 @@ public class MazeGraph {
                         shortest = path;
                     }
                 }
+            } else {
+                shortest = new ArrayList<Point>();
+                shortest.add(start);
+
             }
         }
         return shortest;
@@ -272,6 +276,11 @@ public class MazeGraph {
             sortedDots.add(new DistanceDot(point, Utility.manhattan_distance(start.x, start.y, point.x, point.y)));
         }
         Collections.sort(sortedDots);
+
+        for (DistanceDot dot : sortedDots) {
+            System.out.println(dot.distance);
+        }
+        
 
         for (int i = 0; i < 5 && i < sortedDots.size(); i++) {
 

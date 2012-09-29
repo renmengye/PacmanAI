@@ -6,6 +6,7 @@ import java.util.List;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The Player class is the parent class of your AI player. It is just like a
@@ -18,6 +19,7 @@ public class PacPlayer implements Player {
     private int lives = 3;
     private Pac pac;
     private MazeGraph graph;
+    private List<MoveDir> motion;
 
     /**
      * This is method decides Pacman�s moving direction in the next frame (See
@@ -34,8 +36,24 @@ public class PacPlayer implements Player {
      */
     @Override
     public MoveDir calculateDirection(Maze maze, Ghost[] ghosts, Pac pac, int score) {
-        Point dot = this.graph.findNearestDot(this.pac.getTile(), this.graph.getCurrentDots());
-        return MazeGraph.pathToMoveDir(this.pac.getTile(), this.graph.getShortestPath(this.pac.getTile(), dot, 100)).get(0);
+        if (this.motion.isEmpty()) {
+            Point dot = this.graph.findNearestDot(this.pac.getTile(), this.graph.getCurrentDots());
+            List<List<Point>> path = this.graph.getPaths(this.pac.getTile(), dot, 10);
+            if (path.isEmpty()) {
+                path = new ArrayList<List<Point>>();
+                List<MoveDir> possibleDir=this.pac.getPossibleDirs();
+                Random r=new Random();
+                MoveDir startDir=possibleDir.get(r.nextInt(possibleDir.size()));
+                return startDir;
+            }
+            List<MoveDir> dir = MazeGraph.pathToMoveDir(this.pac.getTile(), path.get(0));
+            this.motion = dir;
+            return calculateDirection(maze, ghosts, pac, score);
+        } else {
+            MoveDir dir = this.motion.get(0);
+            this.motion.remove(0);
+            return dir;
+        }
     }
 
     /**
@@ -53,6 +71,7 @@ public class PacPlayer implements Player {
         System.out.println("Java player start new level!");
         this.graph = new MazeGraph(maze);
         this.pac = pac;
+        this.motion = new ArrayList<MoveDir>();
     }
 
     /**
@@ -71,6 +90,7 @@ public class PacPlayer implements Player {
         System.out.println("Hi, I still have " + lives + " lives left.");
         this.lives--;
         this.pac = pac;
+        this.motion = new ArrayList<MoveDir>();
     }
 
     ;
