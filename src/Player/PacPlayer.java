@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
+import java.util.ArrayList;
 
 /**
  * The Player class is the parent class of your AI player. It is just like a
@@ -106,5 +107,21 @@ public class PacPlayer implements Player {
      */
     public Pac getPac() {
         return this.pac;
+    }
+    
+    public static List<Point> getCurrentDots(Maze maze){
+        List<Point> currentDots = new ArrayList<Point>();
+        MazeItem mazeMatrix[][]=maze.toMatrix();
+        for(int i=0; i< mazeMatrix.length; i++){
+            for(int j=0; j<mazeMatrix[i].length; j++){
+                if(mazeMatrix[i][j]==MazeItem.DOT){
+                    Point p=new Point();
+                    p.x=i;
+                    p.y=j;
+                    currentDots.add(p);
+                }
+            }
+        }
+        return currentDots;
     }
 }
