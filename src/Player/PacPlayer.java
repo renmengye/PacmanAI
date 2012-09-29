@@ -1,3 +1,5 @@
+package Player;
+
 import java.awt.Point;
 import java.util.List;
 
@@ -15,10 +17,10 @@ public class PacPlayer implements Player {
 	private int lives = 3;
 
 	/**
-	 * This is method decides Pacman’s moving direction in the next frame (See
+	 * This is method decides Pacmanï¿½s moving direction in the next frame (See
 	 * Frame Concept). The parameters represent the maze, ghosts, Pacman, and
 	 * score after the execution of last frame. In the next frame, the game will
-	 * call this method to set Pacman’s direction and let him move (see Pacman’s
+	 * call this method to set Pacmanï¿½s direction and let him move (see Pacmanï¿½s
 	 * Move).
 	 * 
 	 * @param maze
@@ -31,6 +33,7 @@ public class PacPlayer implements Player {
 	 *            The current score
 	 * @return MoveDir
 	 */
+    @Override
 	public MoveDir calculateDirection(Maze maze, Ghost[] ghosts, Pac pac,
 			int score) {
 		MoveDir[] directions = MoveDir.values();
@@ -70,6 +73,7 @@ public class PacPlayer implements Player {
 	 * @param score
 	 *            The current score
 	 */
+    @Override
 	public void onLevelStart(Maze maze, Ghost[] ghosts, Pac pac, int score) {
 		System.out.println("Java player start new level!");
 		MazeGraph graph = new MazeGraph(maze);
@@ -90,8 +94,9 @@ public class PacPlayer implements Player {
 	 * @param score
 	 *            The current score
 	 */
+    @Override
 	public void onNewLife(Maze maze, Ghost[] ghosts, Pac pac, int score) {
 		System.out.println("Hi, I still have " + lives + " lives left.");
-		lives--;
+		this.lives--;
 	};
 }
