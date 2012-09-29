@@ -19,6 +19,10 @@ public class Goal {
     private Point point;
     private int distance;
 
+    public Goal(Pac pac){
+        this.pac=pac;
+        
+    }
     public Goal(Pac pac, boolean positive, Point target) {
         this.pac = pac;
         this.positive = positive;
