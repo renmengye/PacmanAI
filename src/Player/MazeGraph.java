@@ -20,6 +20,7 @@ public class MazeGraph {
 
 	private Maze maze;
 
+        // All the possible path from any start point to any end point
 	private Map<Point, Map<Point, List<Point>>> graph;
 
 	public MazeGraph(Maze maze) {
@@ -215,4 +216,8 @@ public class MazeGraph {
 		}
 		return MoveDirList;
 	}
+        
+        public Point getNearestDot(Point start){
+            return new Point(0,0);
+        }
 }

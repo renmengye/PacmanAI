@@ -15,6 +15,7 @@ import com.orbischallenge.pacman.api.java.*;
 public class PacPlayer implements Player {
 
 	private int lives = 3;
+        private Pac pac;
 
 	/**
 	 * This is method decides Pacman�s moving direction in the next frame (See
@@ -99,4 +100,11 @@ public class PacPlayer implements Player {
 		System.out.println("Hi, I still have " + lives + " lives left.");
 		this.lives--;
 	};
+
+    /**
+     * @return the pac
+     */
+    public Pac getPac() {
+        return this.pac;
+    }
 }
