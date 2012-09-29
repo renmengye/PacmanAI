@@ -38,15 +38,14 @@ public class PacPlayer implements Player {
     public MoveDir calculateDirection(Maze maze, Ghost[] ghosts, Pac pac, int score) {
         if (this.motion.isEmpty()) {
             Point dot = this.graph.findNearestDot(this.pac.getTile(), this.graph.getCurrentDots());
-            List<List<Point>> path = this.graph.getPaths(this.pac.getTile(), dot, 10);
+            List<Point> path = this.graph.getShortestPath(this.pac.getTile(), dot);
             if (path.isEmpty()) {
-                path = new ArrayList<List<Point>>();
                 List<MoveDir> possibleDir=this.pac.getPossibleDirs();
                 Random r=new Random();
                 MoveDir startDir=possibleDir.get(r.nextInt(possibleDir.size()));
                 return startDir;
             }
-            List<MoveDir> dir = MazeGraph.pathToMoveDir(this.pac.getTile(), path.get(0));
+            List<MoveDir> dir = MazeGraph.pathToMoveDir(this.pac.getTile(), path);
             this.motion = dir;
             return calculateDirection(maze, ghosts, pac, score);
         } else {

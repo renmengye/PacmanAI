@@ -10,6 +10,8 @@ import java.util.Map;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * A graph representation of the maze. Important: the methods are not optimized
@@ -212,24 +214,79 @@ public class MazeGraph {
      * @param nodeLimit Limit of node in the path
      * @return Call getPaths and return the shortest path in the list of paths
      */
-    public List<Point> getShortestPath(Point start, Point goal, int nodeLimit) {
-        List<List<Point>> paths = getPaths(start, goal, nodeLimit);
-        List<Point> shortest = null;
-        if (paths != null) {
-            if (paths.size() > 0) {
-                shortest = paths.get(0);
-                for (List<Point> path : paths) {
-                    if (path.size() < shortest.size()) {
-                        shortest = path;
+    public List<Point> getShortestPath(Point start, Point goal) {
+        Queue<Point> startPoints = new LinkedList<Point>();
+        startPoints.add(start);
+        Point[][] parents = new Point[24][23];
+        MazeItem[][] map = this.maze.toMatrix();
+        parents[start.y][start.x]=new Point(0,0);
+
+        while (startPoints.size() > 0) {
+            Point anotherStart = startPoints.poll();
+
+            // Found the point
+            if (anotherStart.x == goal.x && anotherStart.y == goal.y) {
+                break;
+            }
+
+            // Try left
+            Point nextPointLeft = new Point(anotherStart.x - 1, anotherStart.y);
+            if (nextPointLeft.x > 0) {
+                if (map[nextPointLeft.y][nextPointLeft.x] != MazeItem.WALL && map[nextPointLeft.y][nextPointLeft.x] != MazeItem.DOOR) {
+                    if (parents[nextPointLeft.y][nextPointLeft.x] == null) {
+                        parents[nextPointLeft.y][nextPointLeft.x] = anotherStart;
+                        startPoints.add(nextPointLeft);
                     }
                 }
-            } else {
-                shortest = new ArrayList<Point>();
-                shortest.add(start);
+            }
 
+            // Try right
+            Point nextPointRight = new Point(anotherStart.x + 1, anotherStart.y);
+            if (nextPointRight.x < 23) {
+                if (map[nextPointRight.y][nextPointRight.x] != MazeItem.WALL && map[nextPointRight.y][nextPointRight.x] != MazeItem.DOOR) {
+                    if (parents[nextPointRight.y][nextPointRight.x] == null) {
+                        parents[nextPointRight.y][nextPointRight.x] = anotherStart;
+                        startPoints.add(nextPointRight);
+                    }
+                }
+            }
+
+            // Try up
+            Point nextPointUp = new Point(anotherStart.x, anotherStart.y - 1);
+            if (nextPointUp.y > 0) {
+                    if (map[nextPointUp.y][nextPointUp.x] != MazeItem.WALL && map[nextPointUp.y][nextPointUp.x] != MazeItem.DOOR) {
+                        if (parents[nextPointUp.y][nextPointUp.x] == null) {
+                            parents[nextPointUp.y][nextPointUp.x] = anotherStart;
+                            startPoints.add(nextPointUp);
+                        }
+                    }
+            }
+
+            // Try down
+            Point nextPointDown = new Point(anotherStart.x, anotherStart.y + 1);
+            if (nextPointDown.y < 24) {
+                if (map[nextPointDown.y][nextPointDown.x] != MazeItem.WALL && map[nextPointDown.y][nextPointDown.x] != MazeItem.DOOR) {
+                    if (parents[nextPointDown.y][nextPointDown.x] == null) {
+                        parents[nextPointDown.y][nextPointDown.x] = anotherStart;
+                        startPoints.add(nextPointDown);
+                    }
+                }
             }
         }
-        return shortest;
+        List<Point> route = new ArrayList<Point>();
+        Point currentPoint = goal;
+        while (true) {
+            route.add(0, currentPoint);
+            if (parents[currentPoint.y][currentPoint.x] != null) {
+                currentPoint = parents[currentPoint.y][currentPoint.x];
+            } else {
+                break;
+            }
+            if (currentPoint.x == start.x && currentPoint.y == start.y) {
+                break;
+            }
+        }
+        return route;
     }
 
     private class DistanceDot implements Comparable {
@@ -280,9 +337,9 @@ public class MazeGraph {
         for (DistanceDot dot : sortedDots) {
             System.out.println(dot.distance);
         }
-        
-
-        for (int i = 0; i < 5 && i < sortedDots.size(); i++) {
+        return sortedDots.get(0).point;
+        //return sortedDots.get(0).point;
+        /*for (int i = 0; i < 5 && i < sortedDots.size(); i++) {
 
             Point point = sortedDots.get(i).point;
 
@@ -290,7 +347,7 @@ public class MazeGraph {
                 nearest = point;
                 continue;
             }
-            List<Point> path = this.getShortestPath(start, point, 10);
+            List<Point> path = this.getShortestPath(start, point);
             int distance = 100;
             if (path != null) {
                 distance = path.size();
@@ -299,11 +356,8 @@ public class MazeGraph {
                 nearestDistance = distance;
                 nearest = point;
             }
-            if (nearestDistance < 5) {
-                break;
-            }
-        }
-        return nearest;
+        }*/
+        //return nearest;
     }
 
     /**
@@ -317,8 +371,8 @@ public class MazeGraph {
             for (int j = 0; j < mazeMatrix[i].length; j++) {
                 if (mazeMatrix[i][j] == MazeItem.DOT) {
                     Point p = new Point();
-                    p.x = i;
-                    p.y = j;
+                    p.x = j;
+                    p.y = i;
                     currentDots.add(p);
                 }
             }
