@@ -215,24 +215,31 @@ public class MazeGraph {
      * @return Call getPaths and return the shortest path in the list of paths
      */
     public List<Point> getShortestPath(Point start, Point goal) {
+
+        if (start.x == goal.x && start.y == goal.y) {
+            List<Point> result = new ArrayList<Point>();
+            return result;
+        }
+
         Queue<Point> startPoints = new LinkedList<Point>();
         startPoints.add(start);
         Point[][] parents = new Point[24][23];
         MazeItem[][] map = this.maze.toMatrix();
-        parents[start.y][start.x]=new Point(0,0);
-
+        parents[start.y][start.x] = new Point(0, 0);
+        boolean success = false;
         while (startPoints.size() > 0) {
             Point anotherStart = startPoints.poll();
 
             // Found the point
             if (anotherStart.x == goal.x && anotherStart.y == goal.y) {
+                success = true;
                 break;
             }
 
             // Try left
             Point nextPointLeft = new Point(anotherStart.x - 1, anotherStart.y);
             if (nextPointLeft.x > 0) {
-                if (map[nextPointLeft.y][nextPointLeft.x] != MazeItem.WALL && map[nextPointLeft.y][nextPointLeft.x] != MazeItem.DOOR) {
+                if (map[nextPointLeft.y][nextPointLeft.x] != MazeItem.WALL && map[nextPointLeft.y][nextPointLeft.x] != MazeItem.DOOR && map[nextPointLeft.y][nextPointLeft.x] != MazeItem.TELEPORT) {
                     if (parents[nextPointLeft.y][nextPointLeft.x] == null) {
                         parents[nextPointLeft.y][nextPointLeft.x] = anotherStart;
                         startPoints.add(nextPointLeft);
@@ -243,7 +250,7 @@ public class MazeGraph {
             // Try right
             Point nextPointRight = new Point(anotherStart.x + 1, anotherStart.y);
             if (nextPointRight.x < 23) {
-                if (map[nextPointRight.y][nextPointRight.x] != MazeItem.WALL && map[nextPointRight.y][nextPointRight.x] != MazeItem.DOOR) {
+                if (map[nextPointRight.y][nextPointRight.x] != MazeItem.WALL && map[nextPointRight.y][nextPointRight.x] != MazeItem.DOOR && map[nextPointRight.y][nextPointRight.x] != MazeItem.TELEPORT) {
                     if (parents[nextPointRight.y][nextPointRight.x] == null) {
                         parents[nextPointRight.y][nextPointRight.x] = anotherStart;
                         startPoints.add(nextPointRight);
@@ -254,18 +261,18 @@ public class MazeGraph {
             // Try up
             Point nextPointUp = new Point(anotherStart.x, anotherStart.y - 1);
             if (nextPointUp.y > 0) {
-                    if (map[nextPointUp.y][nextPointUp.x] != MazeItem.WALL && map[nextPointUp.y][nextPointUp.x] != MazeItem.DOOR) {
-                        if (parents[nextPointUp.y][nextPointUp.x] == null) {
-                            parents[nextPointUp.y][nextPointUp.x] = anotherStart;
-                            startPoints.add(nextPointUp);
-                        }
+                if (map[nextPointUp.y][nextPointUp.x] != MazeItem.WALL && map[nextPointUp.y][nextPointUp.x] != MazeItem.DOOR && map[nextPointUp.y][nextPointUp.x] != MazeItem.TELEPORT) {
+                    if (parents[nextPointUp.y][nextPointUp.x] == null) {
+                        parents[nextPointUp.y][nextPointUp.x] = anotherStart;
+                        startPoints.add(nextPointUp);
                     }
+                }
             }
 
             // Try down
             Point nextPointDown = new Point(anotherStart.x, anotherStart.y + 1);
             if (nextPointDown.y < 24) {
-                if (map[nextPointDown.y][nextPointDown.x] != MazeItem.WALL && map[nextPointDown.y][nextPointDown.x] != MazeItem.DOOR) {
+                if (map[nextPointDown.y][nextPointDown.x] != MazeItem.WALL && map[nextPointDown.y][nextPointDown.x] != MazeItem.DOOR && map[nextPointDown.y][nextPointDown.x] != MazeItem.TELEPORT) {
                     if (parents[nextPointDown.y][nextPointDown.x] == null) {
                         parents[nextPointDown.y][nextPointDown.x] = anotherStart;
                         startPoints.add(nextPointDown);
@@ -274,16 +281,18 @@ public class MazeGraph {
             }
         }
         List<Point> route = new ArrayList<Point>();
-        Point currentPoint = goal;
-        while (true) {
-            route.add(0, currentPoint);
-            if (parents[currentPoint.y][currentPoint.x] != null) {
-                currentPoint = parents[currentPoint.y][currentPoint.x];
-            } else {
-                break;
-            }
-            if (currentPoint.x == start.x && currentPoint.y == start.y) {
-                break;
+        if (success) {
+            Point currentPoint = goal;
+            while (true) {
+                route.add(0, currentPoint);
+                if (parents[currentPoint.y][currentPoint.x] != null) {
+                    currentPoint = parents[currentPoint.y][currentPoint.x];
+                } else {
+                    break;
+                }
+                if (currentPoint.x == start.x && currentPoint.y == start.y) {
+                    break;
+                }
             }
         }
         return route;
@@ -318,6 +327,35 @@ public class MazeGraph {
         }
     }
 
+    private class DistanceGhost implements Comparable {
+
+        Ghost ghost;
+        int distance;
+
+        DistanceGhost(Ghost ghost, int distance) {
+            this.ghost = ghost;
+            this.distance = distance;
+        }
+
+        @Override
+        public int compareTo(Object o) {
+            DistanceGhost dot = null;
+            try {
+                dot = (DistanceGhost) o;
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
+
+            if (dot.distance == this.distance) {
+                return 0;
+            } else if (dot.distance < this.distance) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+    }
+
     /**
      *
      * @param start Given the start point
@@ -325,39 +363,37 @@ public class MazeGraph {
      * @return Find the nearest dot item in the maze, return the Point of the
      * item If the return is null, then there is no dot
      */
-    public Point findNearestDot(Point start, List<Point> availableDots) {
-        Point nearest = null;
-        int nearestDistance = 1000;
+    public List<Point> findNearestDots(Point start, List<Point> availableDots) {
         List<DistanceDot> sortedDots = new ArrayList<DistanceDot>();
         for (Point point : availableDots) {
             sortedDots.add(new DistanceDot(point, Utility.manhattan_distance(start.x, start.y, point.x, point.y)));
         }
         Collections.sort(sortedDots);
 
+        List<Point> results = new ArrayList<Point>();
         for (DistanceDot dot : sortedDots) {
-            System.out.println(dot.distance);
+            results.add(dot.point);
         }
-        return sortedDots.get(0).point;
-        //return sortedDots.get(0).point;
-        /*for (int i = 0; i < 5 && i < sortedDots.size(); i++) {
+        results.add(new Point(0, 0));
+        results.add(new Point(0, 22));
+        results.add(new Point(23, 0));
+        results.add(new Point(23, 22));
+        return results;
+    }
 
-            Point point = sortedDots.get(i).point;
+    public List<Ghost> findNearestGhosts(Point start, Ghost[] ghosts) {
+        List<DistanceGhost> sortedDots = new ArrayList<DistanceGhost>();
+        for (Ghost ghost : ghosts) {
+            sortedDots.add(new DistanceGhost(ghost, Utility.manhattan_distance(start.x, start.y, ghost.getTile().x, ghost.getTile().y)));
+        }
+        Collections.sort(sortedDots);
 
-            if (nearest == null) {
-                nearest = point;
-                continue;
-            }
-            List<Point> path = this.getShortestPath(start, point);
-            int distance = 100;
-            if (path != null) {
-                distance = path.size();
-            }
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                nearest = point;
-            }
-        }*/
-        //return nearest;
+        List<Ghost> results = new ArrayList<Ghost>();
+        for (DistanceGhost dot : sortedDots) {
+            results.add(dot.ghost);
+        }
+
+        return results;
     }
 
     /**
